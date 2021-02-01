@@ -1,4 +1,5 @@
 const express = require('express');
+const { custom } = require('joi');
 const Joi = require('joi');
 const app = express();
 app.use(express.json());
@@ -33,16 +34,19 @@ app.get('/api/customers/:id', (req,res) => {
 //create request handler
 //create new customer informtion
 app.post('/api/customers', (req, res) => {
-    const { error } = validateCustomer(req.body);
+
+    const { error, value } = validateCustomer(req.body);
     if (error) {
-        res.status(400).send(error.details[0].message)
+        res.status(400).send(error)
         return;
     }
+
     //increment the customer id
     const customer = {
         id: customers.length + 1,
         title: req.body.title
     };
+
     customers.push(customer);
     res.send(customer);
 });
@@ -76,13 +80,14 @@ app.delete('/api/customers/:id', (req, res) => {
 
 //Validate Information
 function validateCustomer(customer) {
-    const schema = {
+    const schema = Joi.object({
         title: Joi.string().min(3).required()
-    };
-    return Joi.validate(customer, schema);
+    });
+    // return Joi.valid(customer, schema);
+    return schema.validate(customer);
 }
 
 
 //port environment variable
 const port = process.env.PORT || 8080;
-app.listen(port, () => console.log('Listening on port ${port}..'));
+app.listen(port, () => console.log(`Listening on port ${port}..`));
